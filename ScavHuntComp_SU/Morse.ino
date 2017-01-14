@@ -1,25 +1,21 @@
 
-unsigned long OldMillis = 0;
-unsigned long currentMillis = 0;
-
-int Munits = 0;
-
-int morse_time_unit = 900;
-
-int R_led_pin = 8;
-
-void setup() {
-  Serial.begin(115200);
-  pinMode(R_led_pin, OUTPUT);
-}
-
-void loop() {
-  String mess = "distance to wpt 23491 m";
-  MorseCode(mess);
-}
-
-
 void MorseCode(String message) {
+
+  //  // start every message with 5 rapid blue flashes
+  delay(1000);
+  for (int i = 0; i < 5; i++) {
+    digitalWrite(B_led_pin, HIGH);
+    digitalWrite(G_led_pin, LOW);
+    delay(100);
+    digitalWrite(B_led_pin, LOW);
+    digitalWrite(G_led_pin, HIGH);
+    delay(100);
+  }
+  digitalWrite(B_led_pin, LOW);
+  digitalWrite(G_led_pin, LOW);
+
+  int Munits = 0;
+
   for (int i = 0; i <= message.length(); i++) {
     Serial.print(message[i]);
 
@@ -104,17 +100,17 @@ void MorseCode(String message) {
       blink182(m_signal, Munits);
     }
     else if (String(message[i]) == "q") {
-      char *m_signal[] = {"dash", "dash", "dot","dash"};
+      char *m_signal[] = {"dash", "dash", "dot", "dash"};
       Munits = 4;
       blink182(m_signal, Munits);
     }
     else if (String(message[i]) == "r") {
-      char *m_signal[] = {"dot","dash", "dot"};
+      char *m_signal[] = {"dot", "dash", "dot"};
       Munits = 3;
       blink182(m_signal, Munits);
     }
     else if (String(message[i]) == "s") {
-      char *m_signal[] = {"dot","dot", "dot"};
+      char *m_signal[] = {"dot", "dot", "dot"};
       Munits = 3;
       blink182(m_signal, Munits);
     }
@@ -124,32 +120,32 @@ void MorseCode(String message) {
       blink182(m_signal, Munits);
     }
     else if (String(message[i]) == "u") {
-      char *m_signal[] = {"dot","dot","dash"};
+      char *m_signal[] = {"dot", "dot", "dash"};
       Munits = 3;
       blink182(m_signal, Munits);
     }
     else if (String(message[i]) == "v") {
-      char *m_signal[] = {"dot","dot","dot","dash"};
+      char *m_signal[] = {"dot", "dot", "dot", "dash"};
       Munits = 4;
       blink182(m_signal, Munits);
     }
     else if (String(message[i]) == "w") {
-      char *m_signal[] = {"dot","dash","dash"};
+      char *m_signal[] = {"dot", "dash", "dash"};
       Munits = 3;
       blink182(m_signal, Munits);
     }
     else if (String(message[i]) == "x") {
-      char *m_signal[] = {"dash","dot","dot","dash"};
+      char *m_signal[] = {"dash", "dot", "dot", "dash"};
       Munits = 4;
       blink182(m_signal, Munits);
     }
     else if (String(message[i]) == "y") {
-      char *m_signal[] = {"dash","dot","dash","dash"};
+      char *m_signal[] = {"dash", "dot", "dash", "dash"};
       Munits = 4;
       blink182(m_signal, Munits);
     }
     else if (String(message[i]) == "z") {
-      char *m_signal[] = {"dash","dash","dot","dot"};
+      char *m_signal[] = {"dash", "dash", "dot", "dot"};
       Munits = 4;
       blink182(m_signal, Munits);
     }
@@ -158,62 +154,76 @@ void MorseCode(String message) {
       Munits = 1;
       blink182(m_signal, Munits);
     }
-        else if (String(message[i]) == "1") {
-      char *m_signal[] = {"dot","dash","dash","dash","dash"};
+    else if (String(message[i]) == "1") {
+      char *m_signal[] = {"dot", "dash", "dash", "dash", "dash"};
       Munits = 5;
       blink182(m_signal, Munits);
     }
-        else if (String(message[i]) == "2") {
-      char *m_signal[] = {"dot","dot","dash","dash","dash"};
+    else if (String(message[i]) == "2") {
+      char *m_signal[] = {"dot", "dot", "dash", "dash", "dash"};
       Munits = 5;
       blink182(m_signal, Munits);
     }
-        else if (String(message[i]) == "3") {
-      char *m_signal[] = {"dot","dot","dot","dash","dash"};
+    else if (String(message[i]) == "3") {
+      char *m_signal[] = {"dot", "dot", "dot", "dash", "dash"};
       Munits = 5;
       blink182(m_signal, Munits);
     }
-        else if (String(message[i]) == "4") {
-      char *m_signal[] = {"dot","dot","dot","dot","dash"};
+    else if (String(message[i]) == "4") {
+      char *m_signal[] = {"dot", "dot", "dot", "dot", "dash"};
       Munits = 5;
       blink182(m_signal, Munits);
     }
-        else if (String(message[i]) == "5") {
-      char *m_signal[] = {"dot","dot","dot","dot","dot"};
-      Munits =5;
-      blink182(m_signal, Munits);
-    }
-        else if (String(message[i]) == "6") {
-      char *m_signal[] = {"dash","dot","dot","dot","dot"};
+    else if (String(message[i]) == "5") {
+      char *m_signal[] = {"dot", "dot", "dot", "dot", "dot"};
       Munits = 5;
       blink182(m_signal, Munits);
     }
-        else if (String(message[i]) == "7") {
-      char *m_signal[] = {"dash","dash","dot","dot","dot"};
+    else if (String(message[i]) == "6") {
+      char *m_signal[] = {"dash", "dot", "dot", "dot", "dot"};
       Munits = 5;
       blink182(m_signal, Munits);
     }
-        else if (String(message[i]) == "8") {
-      char *m_signal[] = {"dash","dash","dash","dot","dot"};
+    else if (String(message[i]) == "7") {
+      char *m_signal[] = {"dash", "dash", "dot", "dot", "dot"};
       Munits = 5;
       blink182(m_signal, Munits);
     }
-        else if (String(message[i]) == "9") {
-      char *m_signal[] = {"dash","dash","dash","dash","dot"};
+    else if (String(message[i]) == "8") {
+      char *m_signal[] = {"dash", "dash", "dash", "dot", "dot"};
       Munits = 5;
       blink182(m_signal, Munits);
     }
-        else if (String(message[i]) == "0") {
-      char *m_signal[] = {"dash","dash","dash","dash","dash"};
+    else if (String(message[i]) == "9") {
+      char *m_signal[] = {"dash", "dash", "dash", "dash", "dot"};
+      Munits = 5;
+      blink182(m_signal, Munits);
+    }
+    else if (String(message[i]) == "0") {
+      char *m_signal[] = {"dash", "dash", "dash", "dash", "dash"};
       Munits = 5;
       blink182(m_signal, Munits);
     }
     Serial.println();
   }
+  //  // end every message with 5 rapid blue flashes
+  delay(1000);
+  for (int i = 0; i < 5; i++) {
+    digitalWrite(B_led_pin, HIGH);
+    digitalWrite(G_led_pin, LOW);
+    delay(100);
+    digitalWrite(B_led_pin, LOW);
+    digitalWrite(G_led_pin, HIGH);
+    delay(100);
+  }
+  digitalWrite(B_led_pin, LOW);
+  digitalWrite(G_led_pin, LOW);
 }
 
 
 void blink182(char *blinkies[], int Munits) {
+  int morse_time_unit = 900; // one morse time unit
+
   for (int i = 0; i < Munits; i++) {
     if (blinkies[i] == "dash") {
       digitalWrite(R_led_pin, HIGH);
