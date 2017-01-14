@@ -5,14 +5,14 @@ void MorseCode(String message) {
   delay(1000);
   for (int i = 0; i < 5; i++) {
     digitalWrite(B_led_pin, HIGH);
-    digitalWrite(G_led_pin, LOW);
+    digitalWrite(R_led_pin, LOW);
     delay(100);
     digitalWrite(B_led_pin, LOW);
-    digitalWrite(G_led_pin, HIGH);
+    digitalWrite(R_led_pin, HIGH);
     delay(100);
   }
   digitalWrite(B_led_pin, LOW);
-  digitalWrite(G_led_pin, LOW);
+  digitalWrite(R_led_pin, LOW);
 
   int Munits = 0;
 
@@ -210,14 +210,15 @@ void MorseCode(String message) {
   delay(1000);
   for (int i = 0; i < 5; i++) {
     digitalWrite(B_led_pin, HIGH);
-    digitalWrite(G_led_pin, LOW);
+    digitalWrite(R_led_pin, LOW);
     delay(100);
     digitalWrite(B_led_pin, LOW);
-    digitalWrite(G_led_pin, HIGH);
+    digitalWrite(R_led_pin, HIGH);
     delay(100);
   }
   digitalWrite(B_led_pin, LOW);
-  digitalWrite(G_led_pin, LOW);
+  digitalWrite(R_led_pin, LOW);
+  delay(1000);
 }
 
 

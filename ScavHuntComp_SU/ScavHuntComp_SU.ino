@@ -2,27 +2,41 @@
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
 
-int start_month = 1;
-int start_day = 15;
-
 double waypt_LAT = 41.882591;
 double waypt_LON = -71.378951;
 
-double SOLEDAD_waypt_LAT = 32.839826;
-double SOLEDAD_waypt_LON = -117.244696;
+///////////////// WAYPOINT 1 //////////////////////////
+//double SOLEDAD_waypt_LAT = 32.839826;
+//double SOLEDAD_waypt_LON = -117.244696;
+
+double SOLEDAD_waypt_LAT = 41.955784; // fake boston
+double SOLEDAD_waypt_LON = -71.027170; // fake boston
 int SOLEDAD_tolerance = 15; // meters
+///////////////////////////////////////////////////////
+///////////////// WAYPOINT 2 //////////////////////////
+//double SAILBAY_waypt_LAT = 32.718905;
+//double SAILBAY_waypt_LON = -117.187166;
 
-double SAILBAY_waypt_LAT = 32.718905;
-double SAILBAY_waypt_LON = -117.187166;
-int SAILBAY_tolerance = 50; // meters
+double SAILBAY_waypt_LAT = 41.704719; // fake boston
+double SAILBAY_waypt_LON = -71.268396; // fake boston
+int SAILBAY_tolerance = 25; // meters
+///////////////////////////////////////////////////////
+///////////////// WAYPOINT 3 //////////////////////////
+//double BEACHBIKE_waypt_LAT = 32.798776;
+//double BEACHBIKE_waypt_LON = -117.258491;
 
-double BEACHBIKE_waypt_LAT = 32.798776;
-double BEACHBIKE_waypt_LON = -117.258491;
-int BEACHBIKE_tolerance = 100; // meters
+double BEACHBIKE_waypt_LAT = 41.625234; // fake boston
+double BEACHBIKE_waypt_LON = -71.207034; // fake boston
+int BEACHBIKE_tolerance = 15; // meters
+///////////////////////////////////////////////////////
+///////////////// FINAL WAYPOINT //////////////////////////
+//double SANFRAN_waypt_LAT = 37.442571; // need actual coordinates of final place
+//double SANFRAN_waypt_LON = -122.143201;
 
-double SANFRAN_waypt_LAT = 37.442571; // need actual coordinates of final place
-double SANFRAN_waypt_LON = -122.143201;
+double SANFRAN_waypt_LAT = 41.631468; // fake boston
+double SANFRAN_waypt_LON = -71.208389; // fake boston
 int SANFRAN_tolerance = 15; // meters
+///////////////////////////////////////////////////////
 
 int pause_time = 10000;
 
@@ -36,6 +50,7 @@ static const uint32_t GPSBaud = 57600;
 unsigned long OldMillis = 0;
 unsigned long currentMillis = 0;
 unsigned long tensec = 10000;
+unsigned long startup_millis = 10000;
 
 bool BeginHotCold = false;
 bool cmd_LED_ON = false;
@@ -56,7 +71,7 @@ int ScavHuntStep = PREGAME;
 int address = 0;
 byte value;
 
-String welcome_message = "hello d exclamation point your journey will begin on 1/13/2017"; // don't forget to update this in the step engine!
+bool start_up_oneshot = false;
 
 // The TinyGPS++ object
 TinyGPSPlus gps;
@@ -65,15 +80,17 @@ TinyGPSPlus gps;
 SoftwareSerial ss(RXPin, TXPin);
 
 void setup() {
-  Cele(); // testing cele feature
+  Cele(10); // testing cele feature
 
   Serial.begin(115200);
   ss.begin(GPSBaud);
   pinMode(R_led_pin, OUTPUT);
+  pinMode(G_led_pin, OUTPUT);
+  pinMode(B_led_pin, OUTPUT);
 
   value = EEPROM.read(address);
   ScavHuntStep = int(value);
-  ScavHuntStep = 1; // temporary!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//  ScavHuntStep = 1; // temporary!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! use to reset step engine
   Serial.print("Scavenger hunt step: ");
   Serial.println(ScavHuntStep);
 }
@@ -84,70 +101,58 @@ void loop() {
   while (ss.available() > 0) {
     gps.encode(ss.read());
   }
-  delay(2000); // two sec delay to allow for gps fix
-  if (gps.location.isValid()) {
-    //    if (ScavHuntStep == PREGAME) {
-    //      Serial.println(welcome_message);
-    //      if (gps.date.month() == start_month and gps.date.day() == start_day) {
-    //        ScavHuntStep = SOLEDAD;
-    //      }
-    //      else {
-    //        MorseCode(String(start_month) + " m " + start_day + " d 2017 y");
-    //      }
-    //  }
-    if (ScavHuntStep == SOLEDAD) {
-      arrived = DistanceToWPT(SOLEDAD_waypt_LAT, SOLEDAD_waypt_LON, SOLEDAD_tolerance);
-      if (arrived = true) {
-        ScavHuntStep = SAILBAY;
-        arrived = false;
-      }
-    }
-    else if (ScavHuntStep == SAILBAY) {
-      //      if (gps.time.hour() >= 1 or gps.time.hour() <= 7) {
-      arrived = DistanceToWPT(SAILBAY_waypt_LAT, SAILBAY_waypt_LON, SAILBAY_tolerance);
-      if (arrived = true) {
-        ScavHuntStep = BEACHBIKE;
-        arrived = false;
-      }
-    }
-    //      else if (gps.time.hour() < 1) {
-    //        Serial.print(1 - gps.time.hour());
-    //        Serial.print(" ");
-    //        Serial.println(60 - gps.time.minute());
-    //      }
-    //      else if (gps.time.hour() > 7) {
-    //        Serial.print(24 - gps.time.hour() + 1);
-    //        Serial.print(" ");
-    //        Serial.println(60 - gps.time.minute());
-    //      }
-    //  }
-    else if (ScavHuntStep == BEACHBIKE) {
-      arrived = DistanceToWPT(BEACHBIKE_waypt_LAT, BEACHBIKE_waypt_LON, BEACHBIKE_tolerance);
-      if (arrived = true) {
-        pause_time = abs(int((target_speed - gps.speed.mps()) * 1000 + 100)); // abs() just in case they go super fast
-        if (currentMillis - OldMillis > pause_time and cmd_LED_ON == false) {
-          cmd_LED_ON = true;
-          OldMillis = currentMillis;
-        }
-        else if ((currentMillis - OldMillis) > pause_time and cmd_LED_ON == true) {
-          cmd_LED_ON = false;
-          OldMillis = currentMillis;
-        }
-        if (gps.speed.mps() >= target_speed) {
-          ScavHuntStep = SANFRAN;
-        }
-        arrived = false;
-      }
-    }
-    else if (ScavHuntStep == SANFRAN) {
-      arrived = DistanceToWPT(SANFRAN_waypt_LAT, SANFRAN_waypt_LON, SANFRAN_tolerance);
+  if (not start_up_oneshot) {
+    if (startup_millis <= currentMillis) {
+      start_up_oneshot = true;
     }
   }
-//  else {
-    MorseCode("gps fix needed");
-//    //    Serial.print("gps fix needed");
-//    //    Serial.println(gps.satellites.value());
-//  }
+  else if (start_up_oneshot) {
+
+    if (gps.location.isValid()) {
+      if (ScavHuntStep == SOLEDAD) {
+        Serial.println("SOLEDAD");
+        arrived = DistanceToWPT(SOLEDAD_waypt_LAT, SOLEDAD_waypt_LON, SOLEDAD_tolerance);
+        if (arrived == true) {
+          Cele(100);
+          ScavHuntStep = SAILBAY;
+          arrived = false;
+        }
+      }
+      else if (ScavHuntStep == SAILBAY) {
+        Serial.println("SAILBAY");
+        arrived = DistanceToWPT(SAILBAY_waypt_LAT, SAILBAY_waypt_LON, SAILBAY_tolerance);
+        if (arrived == true) {
+          Cele(100);
+          ScavHuntStep = BEACHBIKE;
+          arrived = false;
+        }
+      }
+
+      else if (ScavHuntStep == BEACHBIKE) {
+        Serial.println("BEACHBIKE");
+        arrived = DistanceToWPT(BEACHBIKE_waypt_LAT, BEACHBIKE_waypt_LON, BEACHBIKE_tolerance);
+        if (arrived == true) {
+          Cele(100);
+          ScavHuntStep = SANFRAN;
+          arrived = false;
+        }
+      }
+
+      else if (ScavHuntStep == SANFRAN) {
+        Serial.println("SANFRAN");
+        arrived = DistanceToWPT(SANFRAN_waypt_LAT, SANFRAN_waypt_LON, SANFRAN_tolerance);
+        if (arrived == true) {
+          Cele(100);
+          Cele(100);
+          Cele(100);
+        }
+      }
+    }
+    else {
+      MorseCode("gps fix needed");
+      //    //    Serial.print("gps fix needed");
+    }
+  }
   EEPROM.write(address, ScavHuntStep); // this currently blasts the EEPROM continuously, can change if seems problematic
 }
 
@@ -174,7 +179,10 @@ bool DistanceToWPT(double waypt_LAT, double waypt_LON, int tolerance) {
   }
 
   if (BeginHotCold == true) {
-    pause_time = dist_to_wpt_meters * 10;
+    pause_time = (dist_to_wpt_meters - tolerance) * 10;
+    if (pause_time < 10){
+      pause_time = 10;
+    }
     if (cmd_LED_ON == false) {
       digitalWrite(G_led_pin, HIGH);
     }
@@ -197,8 +205,8 @@ bool DistanceToWPT(double waypt_LAT, double waypt_LON, int tolerance) {
   return arrived_loc;
 }
 
-void Cele() {
-  for (int i = 0; i < 15; i++) {
+void Cele(int mult) {
+  for (int i = 0; i < mult; i++) {
     digitalWrite(B_led_pin, HIGH);
     digitalWrite(G_led_pin, HIGH);
     digitalWrite(R_led_pin, LOW);
@@ -212,5 +220,8 @@ void Cele() {
     digitalWrite(R_led_pin, HIGH);
     delay(100);
   }
+  digitalWrite(B_led_pin, LOW);
+  digitalWrite(G_led_pin, LOW);
+  digitalWrite(R_led_pin, LOW);
 }
 
