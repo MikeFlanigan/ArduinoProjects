@@ -1,6 +1,13 @@
+/*
+   Much of the gps functionality in this program comes from the "FullExample.ino" sketch provided by Mikal Hart
+   as an example application of the TinyGPS++ library.
+*/
+
+
 #include <EEPROM.h>
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
+//#include <PinChangeInt.h>   // wanted to use the interrupt to switch audio visual but PinChangeInt and SoftSerial conflict
 
 double waypt_LAT = 41.882591;
 double waypt_LON = -71.378951;
@@ -9,40 +16,50 @@ double waypt_LON = -71.378951;
 //double SOLEDAD_waypt_LAT = 32.839826;
 //double SOLEDAD_waypt_LON = -117.244696;
 
-double SOLEDAD_waypt_LAT = 41.955784; // fake boston
-double SOLEDAD_waypt_LON = -71.027170; // fake boston
+double SOLEDAD_waypt_LAT = 41.685110; // fake boston
+double SOLEDAD_waypt_LON = -71.142781; // fake boston
 int SOLEDAD_tolerance = 15; // meters
 ///////////////////////////////////////////////////////
 ///////////////// WAYPOINT 2 //////////////////////////
 //double SAILBAY_waypt_LAT = 32.718905;
 //double SAILBAY_waypt_LON = -117.187166;
 
-double SAILBAY_waypt_LAT = 41.704719; // fake boston
-double SAILBAY_waypt_LON = -71.268396; // fake boston
+double SAILBAY_waypt_LAT = 41.713591; // fake boston
+double SAILBAY_waypt_LON = -71.267152; // fake boston
 int SAILBAY_tolerance = 25; // meters
 ///////////////////////////////////////////////////////
 ///////////////// WAYPOINT 3 //////////////////////////
 //double BEACHBIKE_waypt_LAT = 32.798776;
 //double BEACHBIKE_waypt_LON = -117.258491;
 
-double BEACHBIKE_waypt_LAT = 41.625234; // fake boston
-double BEACHBIKE_waypt_LON = -71.207034; // fake boston
+double BEACHBIKE_waypt_LAT = 41.704686; // fake boston
+double BEACHBIKE_waypt_LON = -71.268534; // fake boston
 int BEACHBIKE_tolerance = 15; // meters
 ///////////////////////////////////////////////////////
 ///////////////// FINAL WAYPOINT //////////////////////////
-//double SANFRAN_waypt_LAT = 37.442571; // need actual coordinates of final place
-//double SANFRAN_waypt_LON = -122.143201;
+//double SANFRAN_waypt_LAT = 37.359446;
+//double SANFRAN_waypt_LON = -121.978287;
 
-double SANFRAN_waypt_LAT = 41.631468; // fake boston
-double SANFRAN_waypt_LON = -71.208389; // fake boston
+double SANFRAN_waypt_LAT = 41.713380; // fake boston
+double SANFRAN_waypt_LON = -71.266976; // fake boston
 int SANFRAN_tolerance = 15; // meters
 ///////////////////////////////////////////////////////
 
 int pause_time = 10000;
 
+int morse_time_unit = 900;
+
 int R_led_pin = 8;
 int B_led_pin = 10;
 int G_led_pin = 9;
+
+int beep_pin = 6;
+
+int UIinterruptPin = A3;
+volatile int UIstate = 0; // 0 means just visual, 1 means visual and audio
+int OldUIstate = 0;
+
+int old_state_val = 1;
 
 static const int RXPin = 4, TXPin = 3;
 static const uint32_t GPSBaud = 57600;
@@ -88,6 +105,11 @@ void setup() {
   pinMode(G_led_pin, OUTPUT);
   pinMode(B_led_pin, OUTPUT);
 
+  pinMode(beep_pin, OUTPUT);
+
+  pinMode(UIinterruptPin, INPUT_PULLUP);
+  digitalWrite(UIinterruptPin, HIGH);
+
   value = EEPROM.read(address);
   ScavHuntStep = int(value);
 //  ScavHuntStep = 1; // temporary!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! use to reset step engine
@@ -101,10 +123,28 @@ void loop() {
   while (ss.available() > 0) {
     gps.encode(ss.read());
   }
+
+  // including the below smart delay messes up the timing in the rest of the program
+  //  smartDelay(1000); // feed gps but limit everything else to 1 hz
   if (not start_up_oneshot) {
+    Serial.println("Startup waiting for recent gps fix...");
     if (startup_millis <= currentMillis) {
       start_up_oneshot = true;
     }
+
+    int state_val = digitalRead(UIinterruptPin);
+    if (state_val == 1 and old_state_val == 0) { // rising edge of button press
+      for (int i = 0; i < 4; i++) {
+        digitalWrite(beep_pin, HIGH);
+        smartDelay(100);
+        digitalWrite(beep_pin, LOW);
+        smartDelay(100);
+      }
+      UIstate = 1;
+    }
+    old_state_val = state_val;
+
+
   }
   else if (start_up_oneshot) {
 
@@ -113,18 +153,20 @@ void loop() {
         Serial.println("SOLEDAD");
         arrived = DistanceToWPT(SOLEDAD_waypt_LAT, SOLEDAD_waypt_LON, SOLEDAD_tolerance);
         if (arrived == true) {
-          Cele(100);
           ScavHuntStep = SAILBAY;
           arrived = false;
+          Cele(40);
+          Serial.println("ARRIVED");
         }
       }
       else if (ScavHuntStep == SAILBAY) {
         Serial.println("SAILBAY");
         arrived = DistanceToWPT(SAILBAY_waypt_LAT, SAILBAY_waypt_LON, SAILBAY_tolerance);
         if (arrived == true) {
-          Cele(100);
           ScavHuntStep = BEACHBIKE;
           arrived = false;
+          Cele(40);
+          Serial.println("ARRIVED");
         }
       }
 
@@ -132,9 +174,10 @@ void loop() {
         Serial.println("BEACHBIKE");
         arrived = DistanceToWPT(BEACHBIKE_waypt_LAT, BEACHBIKE_waypt_LON, BEACHBIKE_tolerance);
         if (arrived == true) {
-          Cele(100);
           ScavHuntStep = SANFRAN;
           arrived = false;
+          Cele(40);
+          Serial.println("ARRIVED");
         }
       }
 
@@ -142,17 +185,26 @@ void loop() {
         Serial.println("SANFRAN");
         arrived = DistanceToWPT(SANFRAN_waypt_LAT, SANFRAN_waypt_LON, SANFRAN_tolerance);
         if (arrived == true) {
+          arrived = false;
           Cele(100);
           Cele(100);
           Cele(100);
+          Serial.println("ARRIVED");
+          Serial.println("ARRIVED");
+          Serial.println("ARRIVED");
         }
       }
     }
     else {
       MorseCode("gps fix needed");
-      //    //    Serial.print("gps fix needed");
+      Serial.print("gps fix needed");
     }
   }
+
+  //  int pot_val = analogRead(A1); // potentiometer to change morse speed
+  //  Serial.print("sensor val:");
+  //  Serial.println(pot_val);
+
   EEPROM.write(address, ScavHuntStep); // this currently blasts the EEPROM continuously, can change if seems problematic
 }
 
@@ -180,14 +232,23 @@ bool DistanceToWPT(double waypt_LAT, double waypt_LON, int tolerance) {
 
   if (BeginHotCold == true) {
     pause_time = (dist_to_wpt_meters - tolerance) * 10;
-    if (pause_time < 10){
+    Serial.println(dist_to_wpt_meters - tolerance);
+    if (pause_time < 10) {
       pause_time = 10;
     }
-    if (cmd_LED_ON == false) {
-      digitalWrite(G_led_pin, HIGH);
+    if (cmd_LED_ON == true) {
+      if (UIstate == 1) {
+        digitalWrite(B_led_pin, HIGH);
+        digitalWrite(beep_pin, HIGH);
+      }
+      else {
+        digitalWrite(B_led_pin, HIGH);
+      }
+      Serial.println("ON");
     }
-    else if (cmd_LED_ON == true) {
-      digitalWrite(G_led_pin, LOW);
+    else if (cmd_LED_ON == false) {
+      digitalWrite(B_led_pin, LOW);
+      Serial.println("OFF");
     }
 
     if (currentMillis - OldMillis > pause_time and cmd_LED_ON == false) {
@@ -210,18 +271,41 @@ void Cele(int mult) {
     digitalWrite(B_led_pin, HIGH);
     digitalWrite(G_led_pin, HIGH);
     digitalWrite(R_led_pin, LOW);
-    delay(100);
+    digitalWrite(beep_pin, LOW);
+    smartDelay(100);
     digitalWrite(B_led_pin, LOW);
     digitalWrite(G_led_pin, HIGH);
     digitalWrite(R_led_pin, HIGH);
-    delay(100);
+    digitalWrite(beep_pin, HIGH);
+    smartDelay(100);
     digitalWrite(B_led_pin, HIGH);
     digitalWrite(G_led_pin, LOW);
     digitalWrite(R_led_pin, HIGH);
-    delay(100);
+    digitalWrite(beep_pin, LOW);
+    smartDelay(100);
   }
   digitalWrite(B_led_pin, LOW);
   digitalWrite(G_led_pin, LOW);
   digitalWrite(R_led_pin, LOW);
 }
 
+
+// This custom version of delay() ensures that the gps object
+// is being "fed".
+static void smartDelay(unsigned long ms)
+{
+  unsigned long start = millis();
+  do
+  {
+    while (ss.available())
+      gps.encode(ss.read());
+  } while (millis() - start < ms);
+}
+
+
+//void UIswitch() {
+//  UIstate ++;
+//  if (UIstate == 3) {
+//    UIstate = 0;
+//  }
+//}

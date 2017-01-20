@@ -2,14 +2,14 @@
 void MorseCode(String message) {
 
   //  // start every message with 5 rapid blue flashes
-  delay(1000);
+  smartDelay(1000);
   for (int i = 0; i < 5; i++) {
     digitalWrite(B_led_pin, HIGH);
     digitalWrite(R_led_pin, LOW);
-    delay(100);
+    smartDelay(100);
     digitalWrite(B_led_pin, LOW);
     digitalWrite(R_led_pin, HIGH);
-    delay(100);
+    smartDelay(100);
   }
   digitalWrite(B_led_pin, LOW);
   digitalWrite(R_led_pin, LOW);
@@ -207,44 +207,64 @@ void MorseCode(String message) {
     Serial.println();
   }
   //  // end every message with 5 rapid blue flashes
-  delay(1000);
+  smartDelay(1000);
   for (int i = 0; i < 5; i++) {
     digitalWrite(B_led_pin, HIGH);
     digitalWrite(R_led_pin, LOW);
-    delay(100);
+    smartDelay(100);
     digitalWrite(B_led_pin, LOW);
     digitalWrite(R_led_pin, HIGH);
-    delay(100);
+    smartDelay(100);
   }
   digitalWrite(B_led_pin, LOW);
   digitalWrite(R_led_pin, LOW);
-  delay(1000);
+  smartDelay(1000);
 }
 
 
 void blink182(char *blinkies[], int Munits) {
-  int morse_time_unit = 900; // one morse time unit
+  if (UIstate == 1) {
+    morse_time_unit = 400; // one morse time unit
+  }
+  else {
+    morse_time_unit = 900; // one morse time unit
+  }
 
   for (int i = 0; i < Munits; i++) {
     if (blinkies[i] == "dash") {
-      digitalWrite(R_led_pin, HIGH);
+      if (UIstate == 1) {
+        digitalWrite(R_led_pin, HIGH);
+        digitalWrite(beep_pin, HIGH);
+      }
+      else {
+        digitalWrite(R_led_pin, HIGH);
+      }
       Serial.print(" Dash ");
-      delay(morse_time_unit * 3);
+      smartDelay(morse_time_unit * 3);
     }
     else if (blinkies[i] == "dot") {
-      digitalWrite(R_led_pin, HIGH);
+      if (UIstate == 1) {
+        digitalWrite(R_led_pin, HIGH);
+        digitalWrite(beep_pin, HIGH);
+      }
+      else {
+        digitalWrite(R_led_pin, HIGH);
+      }
       Serial.print(" Dot ");
-      delay(morse_time_unit);
+      smartDelay(morse_time_unit);
     }
     else if (blinkies[i] == "space") {
       digitalWrite(R_led_pin, LOW);
+      digitalWrite(beep_pin, LOW);
       Serial.print(" space ");
-      delay(morse_time_unit * 4);
+      smartDelay(morse_time_unit * 4);
     }
     digitalWrite(R_led_pin, LOW);
-    delay(morse_time_unit);
+    digitalWrite(beep_pin, LOW);
+    smartDelay(morse_time_unit);
   }
   digitalWrite(R_led_pin, LOW);
-  delay(3 * morse_time_unit); // time between letters is 3 units
+  digitalWrite(beep_pin, LOW);
+  smartDelay(3 * morse_time_unit); // time between letters is 3 units
 }
 
