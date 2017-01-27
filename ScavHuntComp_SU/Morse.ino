@@ -1,5 +1,6 @@
 
 void MorseCode(String message) {
+  bool early_stop = false;
 
   //  // start every message with 5 rapid blue flashes
   smartDelay(1000);
@@ -17,6 +18,19 @@ void MorseCode(String message) {
   int Munits = 0;
 
   for (int i = 0; i <= message.length(); i++) {
+    // early break out
+    unsigned long dist_to_wpt_meters =
+      TinyGPSPlus::distanceBetween(
+        gps.location.lat(),
+        gps.location.lng(),
+        g_waypt_LAT,
+        g_waypt_LON);
+    if (dist_to_wpt_meters < 1000) {
+      early_stop = true;
+      break;
+    }
+    // end early breakout
+
     Serial.print(message[i]);
 
     if (String(message[i]) == "a") {
@@ -206,16 +220,19 @@ void MorseCode(String message) {
     }
     Serial.println();
   }
-  //  // end every message with 5 rapid blue flashes
-  smartDelay(1000);
-  for (int i = 0; i < 5; i++) {
-    digitalWrite(B_led_pin, HIGH);
-    digitalWrite(R_led_pin, LOW);
-    smartDelay(100);
-    digitalWrite(B_led_pin, LOW);
-    digitalWrite(R_led_pin, HIGH);
-    smartDelay(100);
+  if (not early_stop) {
+    //  // end every message with 5 rapid blue flashes
+    smartDelay(1000);
+    for (int i = 0; i < 5; i++) {
+      digitalWrite(B_led_pin, HIGH);
+      digitalWrite(R_led_pin, LOW);
+      smartDelay(100);
+      digitalWrite(B_led_pin, LOW);
+      digitalWrite(R_led_pin, HIGH);
+      smartDelay(100);
+    }
   }
+
   digitalWrite(B_led_pin, LOW);
   digitalWrite(R_led_pin, LOW);
   smartDelay(1000);

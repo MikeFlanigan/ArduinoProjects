@@ -9,41 +9,41 @@
 #include <SoftwareSerial.h>
 //#include <PinChangeInt.h>   // wanted to use the interrupt to switch audio visual but PinChangeInt and SoftSerial conflict
 
-double waypt_LAT = 41.882591;
-double waypt_LON = -71.378951;
-
 ///////////////// WAYPOINT 1 //////////////////////////
 //double SOLEDAD_waypt_LAT = 32.839826;
 //double SOLEDAD_waypt_LON = -117.244696;
 
-double SOLEDAD_waypt_LAT = 41.685110; // fake boston
-double SOLEDAD_waypt_LON = -71.142781; // fake boston
+double SOLEDAD_waypt_LAT = 41.695641; // fake boston
+double SOLEDAD_waypt_LON = -71.264627; // fake boston
 int SOLEDAD_tolerance = 15; // meters
 ///////////////////////////////////////////////////////
 ///////////////// WAYPOINT 2 //////////////////////////
 //double SAILBAY_waypt_LAT = 32.718905;
 //double SAILBAY_waypt_LON = -117.187166;
 
-double SAILBAY_waypt_LAT = 41.713591; // fake boston
-double SAILBAY_waypt_LON = -71.267152; // fake boston
+double SAILBAY_waypt_LAT = 41.713682; // fake boston
+double SAILBAY_waypt_LON = -71.267433; // fake boston
 int SAILBAY_tolerance = 25; // meters
 ///////////////////////////////////////////////////////
 ///////////////// WAYPOINT 3 //////////////////////////
 //double BEACHBIKE_waypt_LAT = 32.798776;
 //double BEACHBIKE_waypt_LON = -117.258491;
 
-double BEACHBIKE_waypt_LAT = 41.704686; // fake boston
-double BEACHBIKE_waypt_LON = -71.268534; // fake boston
+double BEACHBIKE_waypt_LAT = 41.881739; // fake boston
+double BEACHBIKE_waypt_LON = -71.378772; // fake boston
 int BEACHBIKE_tolerance = 15; // meters
 ///////////////////////////////////////////////////////
 ///////////////// FINAL WAYPOINT //////////////////////////
 //double SANFRAN_waypt_LAT = 37.359446;
 //double SANFRAN_waypt_LON = -121.978287;
 
-double SANFRAN_waypt_LAT = 41.713380; // fake boston
-double SANFRAN_waypt_LON = -71.266976; // fake boston
+double SANFRAN_waypt_LAT = 41.704785; // fake boston
+double SANFRAN_waypt_LON = -71.268569; // fake boston
 int SANFRAN_tolerance = 15; // meters
 ///////////////////////////////////////////////////////
+
+double g_waypt_LAT = SOLEDAD_waypt_LAT;
+double g_waypt_LON = SOLEDAD_waypt_LON;
 
 int pause_time = 10000;
 
@@ -127,6 +127,7 @@ void loop() {
   // including the below smart delay messes up the timing in the rest of the program
   //  smartDelay(1000); // feed gps but limit everything else to 1 hz
   if (not start_up_oneshot) {
+    gps.encode(ss.read());
     Serial.println("Startup waiting for recent gps fix...");
     if (startup_millis <= currentMillis) {
       start_up_oneshot = true;
@@ -154,6 +155,8 @@ void loop() {
         arrived = DistanceToWPT(SOLEDAD_waypt_LAT, SOLEDAD_waypt_LON, SOLEDAD_tolerance);
         if (arrived == true) {
           ScavHuntStep = SAILBAY;
+          g_waypt_LAT = SAILBAY_waypt_LAT;
+          g_waypt_LON = SAILBAY_waypt_LON;
           arrived = false;
           Cele(40);
           Serial.println("ARRIVED");
@@ -164,6 +167,8 @@ void loop() {
         arrived = DistanceToWPT(SAILBAY_waypt_LAT, SAILBAY_waypt_LON, SAILBAY_tolerance);
         if (arrived == true) {
           ScavHuntStep = BEACHBIKE;
+          g_waypt_LAT = BEACHBIKE_waypt_LAT;
+          g_waypt_LON = BEACHBIKE_waypt_LON;
           arrived = false;
           Cele(40);
           Serial.println("ARRIVED");
@@ -175,6 +180,8 @@ void loop() {
         arrived = DistanceToWPT(BEACHBIKE_waypt_LAT, BEACHBIKE_waypt_LON, BEACHBIKE_tolerance);
         if (arrived == true) {
           ScavHuntStep = SANFRAN;
+          g_waypt_LAT = SANFRAN_waypt_LAT;
+          g_waypt_LON = SANFRAN_waypt_LON;
           arrived = false;
           Cele(40);
           Serial.println("ARRIVED");
@@ -248,6 +255,7 @@ bool DistanceToWPT(double waypt_LAT, double waypt_LON, int tolerance) {
     }
     else if (cmd_LED_ON == false) {
       digitalWrite(B_led_pin, LOW);
+      digitalWrite(beep_pin, LOW);
       Serial.println("OFF");
     }
 
