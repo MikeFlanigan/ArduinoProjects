@@ -10,35 +10,35 @@
 //#include <PinChangeInt.h>   // wanted to use the interrupt to switch audio visual but PinChangeInt and SoftSerial conflict
 
 ///////////////// WAYPOINT 1 //////////////////////////
-//double SOLEDAD_waypt_LAT = 32.839826;
-//double SOLEDAD_waypt_LON = -117.244696;
+double SOLEDAD_waypt_LAT = 32.839826;
+double SOLEDAD_waypt_LON = -117.244610;
 
-double SOLEDAD_waypt_LAT = 41.695641; // fake boston
-double SOLEDAD_waypt_LON = -71.264627; // fake boston
+//double SOLEDAD_waypt_LAT = 42.397831; // test wpt
+//double SOLEDAD_waypt_LON = -71.124027; // test wpt
 int SOLEDAD_tolerance = 15; // meters
 ///////////////////////////////////////////////////////
 ///////////////// WAYPOINT 2 //////////////////////////
-//double SAILBAY_waypt_LAT = 32.718905;
-//double SAILBAY_waypt_LON = -117.187166;
+double SAILBAY_waypt_LAT = 32.718905;
+double SAILBAY_waypt_LON = -117.187166;
 
-double SAILBAY_waypt_LAT = 41.713682; // fake boston
-double SAILBAY_waypt_LON = -71.267433; // fake boston
+//double SAILBAY_waypt_LAT = 42.355081; // test wpt
+//double SAILBAY_waypt_LON = -71.159988; // test wpt
 int SAILBAY_tolerance = 25; // meters
 ///////////////////////////////////////////////////////
 ///////////////// WAYPOINT 3 //////////////////////////
-//double BEACHBIKE_waypt_LAT = 32.798776;
-//double BEACHBIKE_waypt_LON = -117.258491;
+double BEACHBIKE_waypt_LAT = 32.798776;
+double BEACHBIKE_waypt_LON = -117.258491;
 
-double BEACHBIKE_waypt_LAT = 41.881739; // fake boston
-double BEACHBIKE_waypt_LON = -71.378772; // fake boston
+//double BEACHBIKE_waypt_LAT = 41.639142; // test wpt
+//double BEACHBIKE_waypt_LON = -71.201257; // test wpt
 int BEACHBIKE_tolerance = 15; // meters
 ///////////////////////////////////////////////////////
 ///////////////// FINAL WAYPOINT //////////////////////////
-//double SANFRAN_waypt_LAT = 37.359446;
-//double SANFRAN_waypt_LON = -121.978287;
+double SANFRAN_waypt_LAT = 37.359446;
+double SANFRAN_waypt_LON = -121.978287;
 
-double SANFRAN_waypt_LAT = 41.704785; // fake boston
-double SANFRAN_waypt_LON = -71.268569; // fake boston
+//double SANFRAN_waypt_LAT = 41.631457; // test wpt
+//double SANFRAN_waypt_LON = -71.208192; // test wpt
 int SANFRAN_tolerance = 15; // meters
 ///////////////////////////////////////////////////////
 
@@ -89,6 +89,7 @@ int address = 0;
 byte value;
 
 bool start_up_oneshot = false;
+bool gps_fix_found = false;
 
 // The TinyGPS++ object
 TinyGPSPlus gps;
@@ -150,8 +151,11 @@ void loop() {
   else if (start_up_oneshot) {
 
     if (gps.location.isValid()) {
+      gps_fix_found = true;
       if (ScavHuntStep == SOLEDAD) {
         Serial.println("SOLEDAD");
+        g_waypt_LAT = SOLEDAD_waypt_LAT;
+        g_waypt_LON = SOLEDAD_waypt_LON;
         arrived = DistanceToWPT(SOLEDAD_waypt_LAT, SOLEDAD_waypt_LON, SOLEDAD_tolerance);
         if (arrived == true) {
           ScavHuntStep = SAILBAY;
@@ -164,6 +168,8 @@ void loop() {
       }
       else if (ScavHuntStep == SAILBAY) {
         Serial.println("SAILBAY");
+        g_waypt_LAT = SAILBAY_waypt_LAT;
+        g_waypt_LON = SAILBAY_waypt_LON;
         arrived = DistanceToWPT(SAILBAY_waypt_LAT, SAILBAY_waypt_LON, SAILBAY_tolerance);
         if (arrived == true) {
           ScavHuntStep = BEACHBIKE;
@@ -177,6 +183,8 @@ void loop() {
 
       else if (ScavHuntStep == BEACHBIKE) {
         Serial.println("BEACHBIKE");
+        g_waypt_LAT = BEACHBIKE_waypt_LAT;
+        g_waypt_LON = BEACHBIKE_waypt_LON;
         arrived = DistanceToWPT(BEACHBIKE_waypt_LAT, BEACHBIKE_waypt_LON, BEACHBIKE_tolerance);
         if (arrived == true) {
           ScavHuntStep = SANFRAN;
@@ -190,6 +198,8 @@ void loop() {
 
       else if (ScavHuntStep == SANFRAN) {
         Serial.println("SANFRAN");
+        g_waypt_LAT = SANFRAN_waypt_LAT;
+        g_waypt_LON = SANFRAN_waypt_LON;
         arrived = DistanceToWPT(SANFRAN_waypt_LAT, SANFRAN_waypt_LON, SANFRAN_tolerance);
         if (arrived == true) {
           arrived = false;
@@ -203,6 +213,7 @@ void loop() {
       }
     }
     else {
+      gps_fix_found = false;
       MorseCode("gps fix needed");
       Serial.print("gps fix needed");
     }

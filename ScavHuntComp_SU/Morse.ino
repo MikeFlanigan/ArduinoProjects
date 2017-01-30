@@ -31,6 +31,16 @@ void MorseCode(String message) {
     }
     // end early breakout
 
+    // early break out for gps fix message
+    if (not gps_fix_found) {
+      if (gps.location.isValid()) {
+        early_stop = true;
+        gps_fix_found = true;
+      }
+    }
+
+    // end early break out for gps fix message
+
     Serial.print(message[i]);
 
     if (String(message[i]) == "a") {
